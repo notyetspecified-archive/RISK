@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import logic.Board;
-import logic.Country;
+import logic.Platform;
 import logic.Player;
 
 
@@ -22,18 +22,27 @@ public class AgentGame extends Agent
 {	
 	private static final long serialVersionUID = -1772942192462864835L;
 
-	public static final int MAX_NR_OF_PLAYERS = 6;
-	public static int WAIT = 0;
+	public static final int delay = 200;
 	
-	private ArrayList<Player> players; 
+	public static final int MAX_NR_OF_PLAYERS = 6;
+	public static final int ADD_TROOPS_PHASE = 0;
+	public static final int ATTACK_PHASE = 1;
+	public static final int REINFORCE_PHASE = 2;
+
+	public static Integer currentPlayer = 0;
+	public static Integer currentPhase = 0;
+	
+	public static boolean playing = true;
+	
 	private Board board;
 	
 	protected void setup()
 	{
 		super.setup();
 
-		players = new ArrayList<Player>();
+		Board.players = new ArrayList<Player>();
 		board = new Board();
+		Board.newDeck();
 		
 		//Create Pieces in Window
 		Window.createPieces(board.getWorld().getCountries());
@@ -42,10 +51,6 @@ public class AgentGame extends Agent
 		addBehaviour(new Start(this));
 
 		System.out.println(this.getLocalName()+ " has started.");
-	}
-
-	protected void takeDown(){
-
 	}
 	
 	public class Start extends SimpleBehaviour
@@ -116,9 +121,9 @@ public class AgentGame extends Agent
 				
 				if(msg.getContent().equals(Messaging.JOIN))
 				{
-					if(players.size() <= MAX_NR_OF_PLAYERS)
+					if(Board.players.size() <= MAX_NR_OF_PLAYERS)
 					{
-						players.add(new Player(msg.getSender()));
+						Board.players.add(new Player(msg.getSender()));
 						Messaging.sendMessage(this.myAgent, msg.getSender(), Messaging.ACCEPTED);
 						System.out.println(msg.getSender().getName().split("@")[0]+" joined the game!");
 					}
@@ -131,12 +136,12 @@ public class AgentGame extends Agent
 			}
 			else
 			{
-				if(WAIT > 1000000)
+				if(Board.players.size() == Platform.playerNr)
 				{
 					this.finished=true;
 					addBehaviour(new Play(this.myAgent));
+					initializeGame();
 				}
-				else WAIT++;
 			}
 		}
 
@@ -158,7 +163,136 @@ public class AgentGame extends Agent
 
 		public void action()
 		{
-			initializeGame();
+			//Get agents information
+			AMSAgentDescription [] agents = null;
+			
+			SearchConstraints c = new SearchConstraints();
+            c.setMaxResults ( new Long(-1) );
+            try {
+				agents = AMSService.search( this.myAgent, new AMSAgentDescription (), c );
+			} catch (FIPAException e) {
+				e.printStackTrace();
+			}
+            
+            ArrayList<AID> agentAIDs = new ArrayList<AID>();
+            
+            for (int i=0; i<agents.length;i++)
+            {
+            	String name = agents[i].getName().getName().split("@")[0];
+            	
+            	if(name.startsWith("Player"))
+            		agentAIDs.add(agents[i].getName());
+            }
+            
+            try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            
+            while(playing)
+            {
+            	if(currentPhase.equals(ADD_TROOPS_PHASE))
+            	{
+            		//Set Turn
+            		Window.setTurn(Board.players.get(currentPlayer).toString());
+            		//Set Phase
+					Window.setPhase("Add Troops");
+            		//Send update message to all
+					Messaging.broadcast(this.myAgent, agentAIDs, Messaging.UPDATE+":"+board.toString());
+					
+					//Inform nextPlayer
+					Messaging.sendMessage(this.myAgent, Board.players.get(currentPlayer).getAID(), Messaging.ADD_TROOPS);
+					//Wait for response
+					ACLMessage msg = Messaging.blockingReceiveMessage(this.myAgent);
+					
+					while(!msg.getContent().equals(Messaging.FINISH_ADD_TROOPS))
+					{
+						if(msg.getContent().split(":")[0].equals(Messaging.UPDATE_ADD_TROOPS) && msg.getSender().equals(Board.players.get(currentPlayer).getAID()))
+						{
+							board.updateBoardFromString(msg.getContent().split(":")[1]);
+							Window.updateBoard(board.getWorld().getCountries());
+							try {
+								Thread.sleep(delay);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+						msg = Messaging.blockingReceiveMessage(this.myAgent);
+					}
+					
+            		currentPhase = ATTACK_PHASE;
+            	}
+            	else if(currentPhase.equals(ATTACK_PHASE))
+            	{
+            		//Set Phase
+					Window.setPhase("Attack");
+					//Send update message to all
+					Messaging.broadcast(this.myAgent, agentAIDs, Messaging.UPDATE+":"+board.toString());
+					
+					//Inform nextPlayer
+					Messaging.sendMessage(this.myAgent, Board.players.get(currentPlayer).getAID(), Messaging.ATTACK);
+					//Wait for response
+					ACLMessage msg = Messaging.blockingReceiveMessage(this.myAgent);
+					
+					while(!msg.getContent().equals(Messaging.FINISH_ATTACK))
+					{
+						if(msg.getContent().split(":")[0].equals(Messaging.UPDATE_ATTACK) && msg.getSender().equals(Board.players.get(currentPlayer).getAID()))
+						{
+							board.updateBoardFromString(msg.getContent().split(":")[1]);
+							Window.updateBoard(board.getWorld().getCountries());
+							try {
+								Thread.sleep(delay);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+						msg = Messaging.blockingReceiveMessage(this.myAgent);
+					}
+					
+					currentPhase = REINFORCE_PHASE;
+            	}
+            	else if(currentPhase.equals(REINFORCE_PHASE))
+            	{
+            		//Set Phase
+					Window.setPhase("Reinforce");
+            		//Send update message to all
+					Messaging.broadcast(this.myAgent, agentAIDs, Messaging.UPDATE+":"+board.toString());
+					
+					//Inform nextPlayer
+					Messaging.sendMessage(this.myAgent, Board.players.get(currentPlayer).getAID(), Messaging.REINFORCE);
+					//Wait for response
+					ACLMessage msg = Messaging.blockingReceiveMessage(this.myAgent);
+					
+					while(!msg.getContent().equals(Messaging.FINISH_REINFORCE))
+					{
+						if(msg.getContent().split(":")[0].equals(Messaging.UPDATE_REINFORCE) && msg.getSender().equals(Board.players.get(currentPlayer).getAID()))
+						{
+							board.updateBoardFromString(msg.getContent().split(":")[1]);
+							Window.updateBoard(board.getWorld().getCountries());
+							try {
+								Thread.sleep(delay);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						
+						msg = Messaging.blockingReceiveMessage(this.myAgent);
+					}
+					
+					currentPhase = ADD_TROOPS_PHASE;
+					nextPlayer();
+            	}
+            	
+            	playing = ((AgentGame) this.myAgent).isGameNotOver();
+            }
+			
 			//TODO remove and continue
 			this.finished = true;
 		}
@@ -168,13 +302,26 @@ public class AgentGame extends Agent
 		}
 	}
 
+	public boolean isGameNotOver()
+	{
+		Player player = board.getWorld().getCountries().get(0).getOwner();
+		
+		for(int i=1;i<board.getWorld().getCountries().size();i++)
+		{
+			if(!player.equals(board.getWorld().getCountries().get(i).getOwner()))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	public void initializeGame()
 	{
 		Integer max = 0;
 		Integer min = 0;
 		Integer randomNum;
-		Integer territoryPerPlayer = 42/players.size();
+		Integer territoryPerPlayer = 42/Board.players.size();
 		Integer playerCounter = 0;
 		Integer counter = 0;
 		Integer troopsCounter = 0;
@@ -185,10 +332,10 @@ public class AgentGame extends Agent
 		//Distribute countries by players
 		for(int i=0;i<board.getWorld().getCountries().size();i++)
 		{
-			if(playerCounter.equals(players.size()))
+			if(playerCounter.equals(Board.players.size()))
 				playerCounter--;
 			
-			board.getWorld().getCountries().get(i).setOwner(players.get(playerCounter));
+			board.getWorld().getCountries().get(i).setOwner(Board.players.get(playerCounter));
 			counter++;
 			
 			if(counter.equals(territoryPerPlayer))
@@ -199,14 +346,14 @@ public class AgentGame extends Agent
 		}
 		
 		//Distribute troops
-		for(int j=0;j<players.size();j++)
+		for(int j=0;j<Board.players.size();j++)
 		{
 			counter = 0;
 			min = 0;
 			
 			for(int i=0;i<board.getWorld().getCountries().size();i++)
 			{
-				if(board.getWorld().getCountries().get(i).getOwner().equals(players.get(j)))
+				if(board.getWorld().getCountries().get(i).getOwner().equals(Board.players.get(j)))
 					counter++;
 					
 					randomNum = rand.nextInt((max - min) + 1) + min;
@@ -219,7 +366,7 @@ public class AgentGame extends Agent
 			
 			for(int i=0;i<board.getWorld().getCountries().size();i++)
 			{
-				if(board.getWorld().getCountries().get(i).getOwner().equals(players.get(j)))
+				if(board.getWorld().getCountries().get(i).getOwner().equals(Board.players.get(j)))
 				{
 					randomNum = rand.nextInt((max - min) + 1) + min;
 					
@@ -239,5 +386,16 @@ public class AgentGame extends Agent
 		}
 		
 		Window.updateBoard(board.getWorld().getCountries());
+	}
+	
+	public static void nextPlayer()
+	{
+		if(currentPlayer+1 >= Board.players.size())
+			currentPlayer = 0;
+		else currentPlayer++;
+	}
+
+	protected void takeDown(){
+
 	}
 }

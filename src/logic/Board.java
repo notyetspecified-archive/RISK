@@ -1,7 +1,17 @@
 package logic;
 
+import jade.core.AID;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Random;
+
 public class Board
 {
+	private static final boolean log = false;
+	
 	public static final String ASIA = "Asia";
 	public static final String EUROPE = "Europe";
 	public static final String NORTH_AMERICA = "North America";
@@ -9,11 +19,58 @@ public class Board
 	public static final String SOUTH_AMERICA = "South America";
 	public static final String AUSTRALIA = "Australia";
 	
+	public static final int ASIA_BONUS = 7;
+	public static final int EUROPE_BONUS = 5;
+	public static final int NORTH_AMERICA_BONUS = 5;
+	public static final int AFRICA_BONUS = 3;
+	public static final int SOUTH_AMERICA_BONUS = 2;
+	public static final int AUSTRALIA_BONUS = 3;
+	
+	public static final int DECK_SIZE = 72;
+	public static final int NUMBER_OF_SYMBOLS = 3;
+	
+	public static ArrayList<Player> players;
+	public static ArrayList<Card> deck;
+	public static boolean deckInUse = false;
 	private World world;
+	
+//	public static void main(String[] args)
+//	{
+//		Board board = new Board();
+//		board.getWorld().getCountries().get(0).setTroops(5);
+//		board.getWorld().getCountries().get(1).setTroops(5);
+//		
+//		board.attack(0,1);
+//		
+//		System.out.println(board.getWorld().getCountries().get(0).getTroops());
+//		System.out.println(board.getWorld().getCountries().get(1).getTroops());
+//	}
 
 	public Board()
 	{
 		newBoard();
+	}
+
+	public static void newDeck()
+	{
+		deck = new ArrayList<Card>();
+		
+		for(int i=0;i<DECK_SIZE;i++)
+		{
+			if(i<DECK_SIZE/NUMBER_OF_SYMBOLS)
+				deck.add(new Card(Card.INFANTRY));
+			else if(i<(DECK_SIZE/NUMBER_OF_SYMBOLS)*2)
+				deck.add(new Card(Card.CAVALRY));
+			else deck.add(new Card(Card.ARTILLERY));
+		}
+		
+		shuffleDeck();
+	}
+
+	private static void shuffleDeck()
+	{
+		long seed = System.nanoTime();
+		Collections.shuffle(deck, new Random(seed));
 	}
 
 	private void newBoard()
@@ -353,4 +410,266 @@ public class Board
 		return counter;
 	}
 
+	public boolean isAdjacent(Integer attacker, Integer defendant)
+	{
+		if(this.world.getCountries().get(attacker).getOutnodes().
+				contains(this.world.getCountries().get(defendant)))
+			return true;
+		
+		if(log) System.out.println("Territories are not adjacent!");
+		return false;
+	}
+	
+	public static boolean isAdjacent(Country attacker, Country defendant)
+	{
+		if(attacker.getOutnodes().contains(defendant))
+			return true;
+		
+		if(log) System.out.println("Territories are not adjacent!");
+		return false;
+	}
+	
+	public boolean attack(Country cAttacker, Country cDefendant)
+	{
+		Integer attacker = getCountryIndex(cAttacker);
+		Integer defendant = getCountryIndex(cDefendant);
+		
+		if(isAdjacent(attacker, defendant))
+		{
+			if(this.world.getCountries().get(attacker).getTroops() > 1)
+			{
+				while(this.world.getCountries().get(attacker).getTroops() > 1 &&
+						this.world.getCountries().get(defendant).getTroops() > 0)
+				{
+					rollDice(attacker, defendant);
+					
+					if(this.world.getCountries().get(defendant).getTroops() == 0)
+					{
+						this.world.getCountries().get(defendant).setOwner(cAttacker.getOwner());
+						return true;
+					}
+				}
+			}
+			else if(log) System.out.println("Not enough troops to attack!");
+		}
+		
+		return false;
+	}
+	
+	public boolean attack(Integer attacker, Integer defendant)
+	{
+		if(isAdjacent(attacker, defendant))
+		{
+			if(this.world.getCountries().get(attacker).getTroops() > 1)
+			{
+				while(this.world.getCountries().get(attacker).getTroops() > 1 &&
+						this.world.getCountries().get(defendant).getTroops() > 0)
+				rollDice(attacker, defendant);
+			}
+			else if(log) System.out.println("Not enough troops to attack!");
+		}
+		
+		return false;
+	}
+	
+	public void rollDice(int attacker, int defendant)
+	{
+		Integer attackerTroops = this.world.getCountries().get(attacker).getTroops();
+		Integer defendantTroops = this.world.getCountries().get(defendant).getTroops();
+		Integer nAttackerDice;
+		Integer ndefendantDice;
+		Integer max = 6;
+		Integer min = 1;
+		Random rand = new Random();
+		Integer randomNumber;
+		
+		if(attackerTroops > 3)
+			nAttackerDice = 3;
+		else nAttackerDice = attackerTroops-1;
+		
+		if(defendantTroops >= 2)
+			ndefendantDice = 2;
+		else ndefendantDice = 1;
+		
+		ArrayList<Integer> attackerDice = new ArrayList<Integer>(nAttackerDice);
+		ArrayList<Integer> defendantDice = new ArrayList<Integer>(ndefendantDice);
+		
+		//Roll attacker
+		if(log) System.out.print("\nAttacker rolled ");
+		for(int i=0;i<nAttackerDice;i++)
+		{
+			randomNumber = rand.nextInt((max - min) + 1) + min;
+			attackerDice.add(randomNumber);
+			if(log) System.out.print(randomNumber+", ");
+		}
+		if(log) System.out.println();
+		
+		//Roll defendant
+		if(log) System.out.print("Defendant rolled ");
+		for(int i=0;i<ndefendantDice;i++)
+		{
+			randomNumber = rand.nextInt((max - min) + 1) + min;
+			defendantDice.add(randomNumber);
+			if(log) System.out.print(randomNumber+", ");
+		}
+		if(log) System.out.println();
+		
+		while(!defendantDice.isEmpty() && !attackerDice.isEmpty())
+		{
+			if(attackerDice.get(findMax(attackerDice)) <= 
+					defendantDice.get(findMax(defendantDice)))
+			{
+				attackerTroops--;
+			}
+			else defendantTroops--;
+			
+			attackerDice.remove(findMax(attackerDice));
+			defendantDice.remove(findMax(defendantDice));
+		}
+		
+		this.world.getCountries().get(attacker).setTroops(attackerTroops);
+		this.world.getCountries().get(defendant).setTroops(defendantTroops);
+	}
+	
+	public int findMax(ArrayList<Integer> list)
+	{
+		Integer max = 0;
+		int maxIndex = 0;
+		
+		for(int i=0;i<list.size();i++)
+		{
+			if(list.get(i) > max)
+			{
+				max = list.get(i);
+				maxIndex = i;
+			}
+		}
+		
+		return maxIndex;
+	}
+
+	@Override
+	public String toString()
+	{
+		String str = "";
+		
+		for(int i=0;i<this.world.getCountries().size();i++)
+		{
+			str += this.world.getCountries().get(i).getOwner().getID() + ",";
+			str += this.world.getCountries().get(i).getTroops();		
+					
+			if(i<this.world.getCountries().size()-1)
+				str += ";";
+		}
+		
+		return str;
+	}
+	
+	public void updateBoardFromString(String str)
+	{
+		String countries[] = str.split(";");
+		
+		for(int i=0;i<countries.length;i++)
+		{
+			String settings[] = countries[i].split(",");
+			this.world.getCountries().get(i).setOwner(Board.players.get(Integer.valueOf(settings[0])));
+			this.world.getCountries().get(i).setTroops(Integer.valueOf(settings[1]));
+		}
+	}
+
+	public Integer getPlayerIndex(AID aid)
+	{	
+		for(int i=0;i<Board.players.size();i++)
+		{
+			if(aid.equals(Board.players.get(i)))
+				return i;
+		}
+		
+		return -1;
+	}
+	
+	public Integer getCountryIndex(Country country)
+	{
+		for(int i=0;i<this.getWorld().getCountries().size();i++)
+		{
+			if(country.equals(this.getWorld().getCountries().get(i)))
+				return i;
+		}
+		
+		return -1;
+	}
+	
+	public Country getCountryByName(String name)
+	{
+		for(int i=0;i<this.getWorld().getCountries().size();i++)
+		{
+			if(this.getWorld().getCountries().get(i).getName().equals(name))
+				return this.getWorld().getCountries().get(i);
+		}
+		
+		return null;
+	}
+	
+	//Breadth First Algorithm
+	public void bfs(Country root)
+	{
+		Queue<Country> queue = new LinkedList<Country>();
+		
+		root.setVisited(true);
+		
+		queue.add(root);
+		
+		while(!queue.isEmpty())
+        {
+			Country r = queue.remove();
+			
+			for(Country n: r.getOutnodes())
+			{
+				if(n.getOwner().equals(r.getOwner()))
+				{
+					if(!n.isVisited())
+					{
+						queue.add(n);
+						n.setVisited(true);
+					}
+				}
+			}
+        }
+	}
+
+	public boolean areConnected(Country from, Country to)
+	{
+		setAllNotVisited();
+		bfs(from);
+		return to.isVisited();
+	}
+
+	private void setAllNotVisited()
+	{
+		for(Country c: world.getCountries())
+		{
+			c.setVisited(false);
+		}
+	}
+
+	public static Card pickCard()
+	{
+		while(deckInUse){}
+		
+		deckInUse = true;
+		
+		for(int i=0;i<deck.size();i++)
+		{
+			if(!deck.get(i).isPicked())
+			{
+				deck.get(i).setPicked(true);
+				deckInUse = false;
+				return deck.get(i);
+			}
+		}
+		
+		deckInUse = false;
+		
+		return null;
+	}
 }

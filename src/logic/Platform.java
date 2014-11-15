@@ -24,18 +24,21 @@ public class Platform {
 	private static String hostname = "127.0.0.1"; 
 	private static HashMap<String, ContainerController> containerList=new HashMap<String, ContainerController>();// container's name - container's ref
 	private static List<AgentController> agentList;// agents's ref
-	private static Runtime rt;
-	private static int playerNr;
+	public static int playerNr;
 
 	public static void main(String[] args)
 	{		
 		Scanner reader = new Scanner(System.in);
-		System.out.print("Number of players: ");
-		//get user input for a
-		playerNr=reader.nextInt();
+		
+		while(playerNr < 2 || playerNr > 6)
+		{
+			System.out.print("Number of players: ");
+			playerNr=reader.nextInt();
+			System.out.println();
+		}
 		reader.close();
 		
-		rt=emptyPlatform(containerList);
+		emptyPlatform(containerList);
 		agentList=createAgents(containerList);
 		
 		try {
@@ -53,21 +56,6 @@ public class Platform {
 		
 		Window window = new Window();
 		window.frmRisk.setVisible(true);
-		
-//		EventQueue.invokeLater(new Runnable() {
-//			public void run() {
-//				try {
-//					window.frmRisk.setVisible(true);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		});
-		
-		//window.test();
-		//Tests
-//		Board board = new Board();
-//		System.out.println(board.nrOfTerritoriesInContinent(logic.Board.SOUTH_AMERICA));
 	}
 
 	private static Runtime emptyPlatform(HashMap<String, ContainerController> containerList){
@@ -147,21 +135,6 @@ public class Platform {
 			
             m[0]= sniff_arg;
 			snif= containerList.get("players").createNewAgent("playersSniffer", "jade.tools.sniffer.Sniffer",m);
-			snif.start();
-
-		} catch (StaleProxyException e) {
-			e.printStackTrace();
-			System.out.println("launching of sniffer agent failed");
-
-		}
-		
-		try {
-			Object[] m = new Object[1];
-			String sniff_arg = ""; 
-			sniff_arg += "Game";
-            m[0]= sniff_arg;
-            
-			snif= containerList.get("game").createNewAgent("gameSniffer", "jade.tools.sniffer.Sniffer",m);
 			snif.start();
 
 		} catch (StaleProxyException e) {

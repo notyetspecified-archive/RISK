@@ -10,6 +10,7 @@ public class Country
 	private Player owner;
 	private int troops;
 	private Coordinate coord;
+	private boolean visited;
 
 	public Country(String name, String continent, Coordinate coord)
 	{
@@ -19,6 +20,7 @@ public class Country
 		this.name = name;
 		this.continent = continent;
 		this.coord = coord;
+		this.visited = false;
 	}
 	
 	public void addOutNode(Country outNode)
@@ -54,7 +56,7 @@ public class Country
 		return owner;
 	}
 
-	public void setOwner(Player owner) {
+	public void setOwner(Player owner){
 		this.owner = owner;
 	}
 
@@ -65,6 +67,10 @@ public class Country
 	public void setTroops(int troops) {
 		this.troops = troops;
 	}
+	
+	public void addTroops(int troops) {
+		this.troops += troops;
+	}
 
 	public Coordinate getCoord() {
 		return coord;
@@ -72,5 +78,13 @@ public class Country
 
 	public void setCoord(Coordinate coord) {
 		this.coord = coord;
+	}
+
+	public boolean isVisited() {
+		return visited;
+	}
+
+	public void setVisited(boolean visited) {
+		this.visited = visited;
 	}
 }
