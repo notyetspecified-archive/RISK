@@ -7,10 +7,20 @@ import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+/**
+ * Classe de controlo de mensagens entre agentes
+ *  
+ * @author João Ladeiras
+ * @author Rui Lima
+ * 
+ */
+
 public class Messaging
 {
+	//Flag log
 	private static final boolean log = false;
 	
+	//Constantes das mensagens de controlo
 	public static final String START = "start";
 	public static final String JOIN = "join";
 	public static final String ACCEPTED = "accepted";
@@ -25,7 +35,16 @@ public class Messaging
 	public static final String REINFORCE = "reinforce";
 	public static final String FINISH_REINFORCE = "finish_reinforce";
 	public static final String UPDATE_REINFORCE = "update_reinforce";
+	public static final String ALLY = "ally";
+	public static final String ACCEPT_ALLY = "accept_ally";
+	public static final String REJECT_ALLY = "reject_ally";
 	
+	/**
+	 * Recebe uma mensagem performativa
+	 * 
+	 * @param receiver Agente que recebe a mesangem
+	 * @return Mensagem
+	 */
 	public static ACLMessage receiveMessage(Agent receiver)
 	{
 		final MessageTemplate msgTemplate = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
@@ -41,6 +60,13 @@ public class Messaging
 		}
 	}
 	
+	/**
+	 * Recebe uma mensagem performativa.
+	 * Suspende o agente até a mensagem estar disponivel
+	 * 
+	 * @param receiver Agente que recebe a mesangem
+	 * @return Mensagem
+	 */
 	public static ACLMessage blockingReceiveMessage(Agent receiver)
 	{
 		final MessageTemplate msgTemplate = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
@@ -51,6 +77,13 @@ public class Messaging
 		return msg;
 	}
 	
+	/**
+	 * Envia uma mensagem performativa
+	 * 
+	 * @param sender Agente remetente
+	 * @param receiver Nome do agente destinatário
+	 * @param content Conteúdo da mensagem
+	 */
 	public static void sendMessage(Agent sender, String receiver, String content)
 	{
 		final ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -65,6 +98,13 @@ public class Messaging
 			System.out.println("--> Message sent to "+msg.getAllReceiver().next()+" ,content= "+msg.getContent());
 	}
 	
+	/**
+	 * Envia uma mensagem performativa
+	 * 
+	 * @param sender Agente remetente
+	 * @param receiver AID do agente destinatário
+	 * @param content Conteúdo da mensagem
+	 */
 	public static void sendMessage(Agent sender, AID receiver, String content)
 	{
 		final ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -79,6 +119,13 @@ public class Messaging
 			System.out.println("--> Message sent to "+msg.getAllReceiver().next()+" ,content= "+msg.getContent());
 	}
 
+	/**
+	 * Envia uma mensagem para uma lista de agentes
+	 * 
+	 * @param sender Agente remetente
+	 * @param agentAIDs Lista de AIDs dos agentes remetentes
+	 * @param content Conteúdo da mensagem
+	 */
 	public static void broadcast(Agent sender, ArrayList<AID> agentAIDs, String content)
 	{
 		final ACLMessage msg = new ACLMessage(ACLMessage.INFORM);

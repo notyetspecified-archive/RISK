@@ -1,7 +1,16 @@
 package logic;
 
+/**
+ * Classe carta
+ *  
+ * @author João Ladeiras
+ * @author Rui Lima
+ * 
+ */
+
 public class Card
 {
+	//Tipos de cartas
 	public static final int INFANTRY = 0;
 	public static final int CAVALRY = 1;
 	public static final int ARTILLERY = 2;
@@ -10,6 +19,11 @@ public class Card
 	private boolean picked;
 	private boolean used;
 
+	/**
+	 * Construtor
+	 * 
+	 * @param symbol Tipo de carta
+	 */
 	public Card(int symbol) {
 		super();
 		this.symbol = symbol;

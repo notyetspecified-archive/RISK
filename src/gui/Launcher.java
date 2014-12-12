@@ -2,33 +2,58 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import java.awt.GridBagLayout;
-import javax.swing.JLabel;
-import java.awt.GridBagConstraints;
-import javax.swing.JComboBox;
-import java.awt.Insets;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.factories.FormFactory;
-import com.jgoodies.forms.layout.RowSpec;
-import java.awt.GridLayout;
-import javax.swing.DefaultComboBoxModel;
+
+import logic.Platform;
+
+/**
+ * Nesta classe são criados os elementos da janela inicial.
+ * 
+ * Nesta janela poderá ser escolhido:
+ * 	- Tempo de atraso entre movimentos (em milisegundos)
+ * 	- Definir o modo com ou sem alianças
+ * 	- O tipo de cada jogador, sendo que o número de jogadores é igual ao número
+ * 		de jogadores com tipo definido 
+ *  
+ * @author João Ladeiras
+ * @author Rui Lima
+ * 
+ */
 
 public class Launcher extends JDialog {
 
 	private static final long serialVersionUID = 3873885555141009503L;
 	private final JPanel contentPanel = new JPanel();
-
+	private JPanel buttonPane;
+	private JButton okButton;
+	private JButton cancelButton;
+	private JComboBox<String> comboBoxDelay;
+	private JComboBox<String> comboBoxAllies;
+	private JComboBox<String> comboBox1;
+	private JComboBox<String> comboBox2;
+	private JComboBox<String> comboBox3;
+	private JComboBox<String> comboBox4;
+	private JComboBox<String> comboBox5;
+	private JComboBox<String> comboBox6;
+	
+	public static String[] delayTimes = {"1000", "1", "100", "2000", "3000"};
+	public static String[] allies = {"No", "Yes"};
+	
 	/**
-	 * Create the dialog.
+	 * Criar a janela
 	 */
-	public Launcher() {
-		setBounds(100, 100, 450, 300);
+	public Launcher()
+	{
+		setBounds(100, 100, 300, 400);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -37,26 +62,36 @@ public class Launcher extends JDialog {
 			JPanel panel = new JPanel();
 			contentPanel.add(panel);
 			{
-				JLabel lblNumerOfPlayers = new JLabel("Numer of Players");
-				panel.add(lblNumerOfPlayers);
+				JLabel lblDelay = new JLabel("Delay (miliseconds)");
+				panel.add(lblDelay);
 			}
 			{
-				JComboBox comboBox = new JComboBox();
-				comboBox.setModel(new DefaultComboBoxModel(new String[] {"2", "3", "4", "5", "6"}));
-				panel.add(comboBox);
+				comboBoxDelay = new JComboBox<String>(delayTimes);
+				panel.add(comboBoxDelay);
 			}
 		}
 		{
 			JPanel panel = new JPanel();
-			FlowLayout flowLayout = (FlowLayout) panel.getLayout();
+			contentPanel.add(panel);
+			{
+				JLabel lblDelay = new JLabel("Play with Alliances");
+				panel.add(lblDelay);
+			}
+			{
+				comboBoxAllies = new JComboBox<String>(allies);
+				panel.add(comboBoxAllies);
+			}
+		}
+		{
+			JPanel panel = new JPanel();
 			contentPanel.add(panel);
 			{
 				JLabel lblPlayer_1 = new JLabel("Player 1");
 				panel.add(lblPlayer_1);
 			}
 			{
-				JComboBox comboBox = new JComboBox();
-				panel.add(comboBox);
+				comboBox1 = new JComboBox<String>(Platform.playerType);
+				panel.add(comboBox1);
 			}
 		}
 		{
@@ -67,8 +102,8 @@ public class Launcher extends JDialog {
 				panel.add(lblPlayer_2);
 			}
 			{
-				JComboBox comboBox = new JComboBox();
-				panel.add(comboBox);
+				comboBox2 = new JComboBox<String>(Platform.playerType);
+				panel.add(comboBox2);
 			}
 		}
 		{
@@ -79,8 +114,8 @@ public class Launcher extends JDialog {
 				panel.add(lblPlayer_3);
 			}
 			{
-				JComboBox comboBox = new JComboBox();
-				panel.add(comboBox);
+				comboBox3 = new JComboBox<String>(Platform.playerType);
+				panel.add(comboBox3);
 			}
 		}
 		{
@@ -91,8 +126,8 @@ public class Launcher extends JDialog {
 				panel.add(lblPlayer_4);
 			}
 			{
-				JComboBox comboBox = new JComboBox();
-				panel.add(comboBox);
+				comboBox4 = new JComboBox<String>(Platform.playerType);
+				panel.add(comboBox4);
 			}
 		}
 		{
@@ -103,8 +138,8 @@ public class Launcher extends JDialog {
 				panel.add(lblPlayer_5);
 			}
 			{
-				JComboBox comboBox = new JComboBox();
-				panel.add(comboBox);
+				comboBox5 = new JComboBox<String>(Platform.playerType);
+				panel.add(comboBox5);
 			}
 		}
 		{
@@ -115,26 +150,68 @@ public class Launcher extends JDialog {
 				panel.add(lblPlayer_6);
 			}
 			{
-				JComboBox comboBox = new JComboBox();
-				panel.add(comboBox);
+				comboBox6 = new JComboBox<String>(Platform.playerType);
+				panel.add(comboBox6);
 			}
 		}
 		{
-			JPanel buttonPane = new JPanel();
+			buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
-				JButton okButton = new JButton("OK");
+				okButton = new JButton("OK");
 				okButton.setActionCommand("OK");
 				buttonPane.add(okButton);
 				getRootPane().setDefaultButton(okButton);
 			}
 			{
-				JButton cancelButton = new JButton("Cancel");
+				cancelButton = new JButton("Cancel");
 				cancelButton.setActionCommand("Cancel");
 				buttonPane.add(cancelButton);
 			}
 		}
+		
+		//Listeners
+		okButton.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				setVisible(false);
+			}
+		});
+		
+		cancelButton.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				setVisible(false);
+			}
+		});
 	}
-
+	public JComboBox<String> getComboBox1() {
+		return comboBox1;
+	}
+	public JComboBox<String> getComboBox2() {
+		return comboBox2;
+	}
+	public JComboBox<String> getComboBox3() {
+		return comboBox3;
+	}
+	public JComboBox<String> getComboBox4() {
+		return comboBox4;
+	}
+	public JComboBox<String> getComboBox5() {
+		return comboBox5;
+	}
+	public JComboBox<String> getComboBox6() {
+		return comboBox6;
+	}
+	public JComboBox<String> getComboBoxDelay() {
+		return comboBoxDelay;
+	}
+	public JComboBox<String> getComboBoxAllies() {
+		return comboBoxAllies;
+	}
 }

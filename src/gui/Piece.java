@@ -6,23 +6,42 @@ import gui.Window.CirclePanel;
 
 import javax.swing.JLabel;
 
+/**
+ * Classe do elemento Peça usado na interface do tabuleiro
+ *  
+ * @author João Ladeiras
+ * @author Rui Lima
+ * 
+ */
+
 public class Piece
 {
 	private String country;
 	private JLabel label;
 	private Window.CirclePanel circle;
 	
+	/**
+	 * Construtor
+	 * 
+	 * @param country Nome do país correspondente
+	 * @param x Coordenada horizontal na imagem do tabuleiro
+	 * @param y Coordenada vertical na imagem do tabuleiro
+	 * @param color Cor da peça
+	 */
 	public Piece(String country, int x, int y, Color color)
 	{
 		super();
 		this.country = country;
+		//Círculo
 		this.circle = new CirclePanel();
 		this.circle.setForeground(color);
 		this.circle.setOpaque(false);
 		this.circle.setBounds(x, y, 50, 50);
         
 		this.label = new JLabel();
+		//Cor do texto
 		this.label.setForeground(Color.white);
+		//Label inicial (número de tropas)
 		label.setText("<html><h3>NaN</h3></html>");
 		this.circle.add(label);
 	}

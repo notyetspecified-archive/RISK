@@ -13,6 +13,17 @@ import javax.swing.SwingConstants;
 import logic.Country;
 import logic.World;
 
+/**
+ * Classe da interface do tabuleiro de jogo.
+ * A interface é constituída por objectos Piece nas respetivas posições da
+ * imagem backGround.jpg.
+ * São também mostradas labels com o jogador e fase atual.
+ *  
+ * @author João Ladeiras
+ * @author Rui Lima
+ * 
+ */
+
 public class Window
 {
 	public JFrame frmRisk;
@@ -21,21 +32,21 @@ public class Window
 	private static ArrayList<Piece> pieces = new ArrayList<Piece>();
 
 	/**
-	 * Create the application.
+	 * Criação da janela
 	 */
 	public Window() {
 		initialize();
 	}
 
 	/**
-	 * Initialize the contents of the frame.
+	 * Inicialização das componentes da janela
 	 */
 	private void initialize()
 	{
 		JPanel p = new JPanel();
         p.setLayout(null);
         
-        //Wait for Agent Game
+        //Esperar pelo agente Game
         while(pieces.size() < World.NR_OF_COUNTRIES){};
 
         for(int i=0;i<pieces.size();i++)

@@ -1,9 +1,24 @@
 package logic;
 
+/**
+ * Classe coordenada
+ *  
+ * @author João Ladeiras
+ * @author Rui Lima
+ * 
+ */
+
 public class Coordinate
 {
 	private int x;
 	private int y;
+	
+	/**
+	 * Construtor
+	 * 
+	 * @param x Coordenada vertical
+	 * @param y Coordenada horizontal
+	 */
 	public Coordinate(int x, int y) {
 		super();
 		this.x = x;

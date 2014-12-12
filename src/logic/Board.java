@@ -8,10 +8,20 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
+/**
+ * Classe do tabuleiro de jogo
+ *  
+ * @author João Ladeiras
+ * @author Rui Lima
+ * 
+ */
+
 public class Board
 {
+	//Flag log
 	private static final boolean log = false;
 	
+	//Constantes dos elementos do tabuleiro
 	public static final String ASIA = "Asia";
 	public static final String EUROPE = "Europe";
 	public static final String NORTH_AMERICA = "North America";
@@ -29,28 +39,25 @@ public class Board
 	public static final int DECK_SIZE = 72;
 	public static final int NUMBER_OF_SYMBOLS = 3;
 	
+	//Lista de jogadores
 	public static ArrayList<Player> players;
+	//Baralho de cartas
 	public static ArrayList<Card> deck;
 	public static boolean deckInUse = false;
+	//Objeto mundo associado
 	private World world;
-	
-//	public static void main(String[] args)
-//	{
-//		Board board = new Board();
-//		board.getWorld().getCountries().get(0).setTroops(5);
-//		board.getWorld().getCountries().get(1).setTroops(5);
-//		
-//		board.attack(0,1);
-//		
-//		System.out.println(board.getWorld().getCountries().get(0).getTroops());
-//		System.out.println(board.getWorld().getCountries().get(1).getTroops());
-//	}
 
+	/**
+	 * Construtor do tabuleiro
+	 */
 	public Board()
 	{
 		newBoard();
 	}
 
+	/**
+	 * Gera novo baralho de cartas
+	 */
 	public static void newDeck()
 	{
 		deck = new ArrayList<Card>();
@@ -64,15 +71,22 @@ public class Board
 			else deck.add(new Card(Card.ARTILLERY));
 		}
 		
+		//Baralhar
 		shuffleDeck();
 	}
 
+	/**
+	 * Baralha as cartas
+	 */
 	private static void shuffleDeck()
 	{
 		long seed = System.nanoTime();
 		Collections.shuffle(deck, new Random(seed));
 	}
 
+	/**
+	 * Inicialização dos elementos do tabuleiro
+	 */
 	private void newBoard()
 	{
 		//Create countries
@@ -399,6 +413,12 @@ public class Board
 		return world;
 	}
 
+	/**
+	 * Calcula o numero de territorios num dado continente
+	 * 
+	 * @param continent Nome do continente
+	 * @return numero de territorios
+	 */
 	public int nrOfTerritoriesInContinent(String continent)
 	{
 		int counter = 0;
@@ -410,6 +430,14 @@ public class Board
 		return counter;
 	}
 
+	/**
+	 * Verifica se um dado territorio a ser atacado é adjacente ao terriótio
+	 * de onde são enviadas as tropas
+	 * 
+	 * @param attacker Indice do territorio de onde são enviadas as tropas
+	 * @param defendant Indice do territorio para onde são enviadas as tropas
+	 * @return Adjacente
+	 */
 	public boolean isAdjacent(Integer attacker, Integer defendant)
 	{
 		if(this.world.getCountries().get(attacker).getOutnodes().
@@ -420,6 +448,14 @@ public class Board
 		return false;
 	}
 	
+	/**
+	 * Verifica se um dado territorio a ser atacado é adjacente ao terriótio
+	 * de onde são enviadas as tropas
+	 * 
+	 * @param attacker Territorio de onde são enviadas as tropas
+	 * @param defendant Territorio para onde são enviadas as tropas
+	 * @return Adjacente
+	 */
 	public static boolean isAdjacent(Country attacker, Country defendant)
 	{
 		if(attacker.getOutnodes().contains(defendant))
@@ -429,6 +465,13 @@ public class Board
 		return false;
 	}
 	
+	/**
+	 * Realiza um ataque se os territorios são inimigos e adjacentes
+	 * 
+	 * @param cAttacker Territorio de onde são enviadas as tropas
+	 * @param cDefendant Territorio para onde são enviadas as tropas
+	 * @return Ataque possivel
+	 */
 	public boolean attack(Country cAttacker, Country cDefendant)
 	{
 		Integer attacker = getCountryIndex(cAttacker);
@@ -456,6 +499,13 @@ public class Board
 		return false;
 	}
 	
+	/**
+	 * Realiza um ataque se os territorios são inimigos e adjacentes
+	 * 
+	 * @param cAttacker Indice do territorio de onde são enviadas as tropas
+	 * @param cDefendant Indice do territorio para onde são enviadas as tropas
+	 * @return Ataque possivel
+	 */
 	public boolean attack(Integer attacker, Integer defendant)
 	{
 		if(isAdjacent(attacker, defendant))
@@ -472,6 +522,12 @@ public class Board
 		return false;
 	}
 	
+	/**
+	 * Lançamento de dados
+	 * 
+	 * @param attacker Indice do territorio de onde são enviadas as tropas
+	 * @param defendant Indice do territorio para onde são enviadas as tropas
+	 */
 	public void rollDice(int attacker, int defendant)
 	{
 		Integer attackerTroops = this.world.getCountries().get(attacker).getTroops();
@@ -531,6 +587,12 @@ public class Board
 		this.world.getCountries().get(defendant).setTroops(defendantTroops);
 	}
 	
+	/**
+	 * Verifica qual o valor mais alto numa lista de inteiros
+	 * 
+	 * @param list Lista de inteiros
+	 * @return Valor máximo
+	 */
 	public int findMax(ArrayList<Integer> list)
 	{
 		Integer max = 0;
@@ -565,6 +627,15 @@ public class Board
 		return str;
 	}
 	
+	/**
+	 * Atualiza o tabuleiro a partir de uma string com o indice do agente
+	 * atual ao qual pertence o territorio e respetivo numero de tropas.
+	 * Os elementos são divididos por ";" em que cada elemento dividido por
+	 * "," corresponde a indice do agente e numero de tropas respetivamente.
+	 * A ordem dos elementos corresponde ao indice dos territorios predefinido
+	 * 
+	 * @param str String com os dados dos territorios
+	 */
 	public void updateBoardFromString(String str)
 	{
 		String countries[] = str.split(";");
@@ -577,6 +648,12 @@ public class Board
 		}
 	}
 
+	/**
+	 * Verifica qual o indice do agente na lista de agentes
+	 * 
+	 * @param aid AID do agente
+	 * @return Indice do agente
+	 */
 	public Integer getPlayerIndex(AID aid)
 	{	
 		for(int i=0;i<Board.players.size();i++)
@@ -588,6 +665,12 @@ public class Board
 		return -1;
 	}
 	
+	/**
+	 * Verifica qual o indice do territorio na lista de territorios
+	 * 
+	 * @param country Territorio
+	 * @return Indice do territorio
+	 */
 	public Integer getCountryIndex(Country country)
 	{
 		for(int i=0;i<this.getWorld().getCountries().size();i++)
@@ -599,6 +682,12 @@ public class Board
 		return -1;
 	}
 	
+	/**
+	 * Verifica qual o objeto territorio segundo o seu nome
+	 * 
+	 * @param name Nome do territorio
+	 * @return Objecto do territorio
+	 */
 	public Country getCountryByName(String name)
 	{
 		for(int i=0;i<this.getWorld().getCountries().size();i++)
@@ -610,7 +699,11 @@ public class Board
 		return null;
 	}
 	
-	//Breadth First Algorithm
+	/**
+	 * Breadth First Algorithm
+	 * 
+	 * @param root Territorio inicial na pesquisa
+	 */
 	public void bfs(Country root)
 	{
 		Queue<Country> queue = new LinkedList<Country>();
@@ -637,6 +730,15 @@ public class Board
         }
 	}
 
+	/**
+	 * Verifica se dois dados territorios são conexos, isto é, se existe um
+	 * caminho no grafo de territorios, sendo que os territorios intermedios
+	 * pertencem ao agente atual
+	 * 
+	 * @param from Territorio de origem
+	 * @param to territorio de destino
+	 * @return Conexo
+	 */
 	public boolean areConnected(Country from, Country to)
 	{
 		setAllNotVisited();
@@ -644,6 +746,9 @@ public class Board
 		return to.isVisited();
 	}
 
+	/**
+	 * Inicializa todos os territorios como não visitados
+	 */
 	private void setAllNotVisited()
 	{
 		for(Country c: world.getCountries())
@@ -652,6 +757,11 @@ public class Board
 		}
 	}
 
+	/**
+	 * Retira uma carta do baralho
+	 * 
+	 * @return Carta
+	 */
 	public static Card pickCard()
 	{
 		while(deckInUse){}
